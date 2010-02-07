@@ -1,7 +1,7 @@
 ERLC = erlc
 EBIN = ../ebin
 ERLINC = ../include 
-ERL_FLAGS = -I$(ERLINC) -I/home/olle/src/engine/include +warn_unused_vars +debug_info
+ERL_FLAGS = -I$(ERLINC) -I$(ENGINE_PATH)/include +warn_unused_vars +debug_info
 
 MODULES = \
 	main \
