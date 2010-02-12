@@ -23,7 +23,7 @@ create_box(Text) ->
 		      {flags, 0}]).
 
 create_box(Title, Opts) ->
-    parse_opts(Opts, #form{type = box, text = Title}).
+    parse_opts(Opts, #form{type = box, title = Title}).
 
 parse_opts([{pos, Pos={X,Y}}|Opts], B) when is_integer(X),
 					    is_integer(Y) ->
@@ -44,7 +44,7 @@ parse_opts([Opt|_], _) ->
 
 draw_form(#form{type = box,
 		size = {W,H}, pos = {X,Y},
-		text = Title, flags = _Flags}) ->
+		title = Title, flags = _Flags}) ->
     gl:pushMatrix(),
     gl:loadIdentity(),
 
@@ -75,7 +75,7 @@ draw_form(#form{type = box,
     gl:popMatrix();
 draw_form(#form{type = button,
 		size = {W,H}, pos = {X,Y},
-		text = Text, flags = _Flags}) ->
+		title = Text, flags = _Flags}) ->
     gl:pushMatrix(),
     gl:loadIdentity(),
 
@@ -132,7 +132,7 @@ create_button(Text) ->
 create_button(Text, Font) ->
     W = calc_width(Text, Font) + 10,
     {_,H} = font:get_font_size(Font),
-    #form{type = button, text = Text, size = {W,H},
+    #form{type = button, title = Text, size = {W,H},
 	  flags = 0, pos = {10,10}}.
 
 calc_width(Text) ->

@@ -11,7 +11,7 @@
 -include("tibia.hrl").
 
 -export([get_rgba/1,gen_data/1, test_blit/0, create_gl_texture/1,
-	 save/2, save_png/1, save_all/0, load_spr/1, blit_sprite/2]).
+	 save/2, save_png/2, save_all/0, load_spr/1, blit_sprite/2]).
 
 load_spr(File) ->
     {ok, Device} = file:open(File, [read,binary]),
@@ -84,6 +84,7 @@ get_pixel(Data, ChunkSize, {32,Y}, Acc) ->
 get_pixel(Data, 0, Pos, Acc) ->
     {Data, Acc, Pos};
 get_pixel(<<RGB:3/binary,Rest/binary>>, ChunkSize, {X, Y}, Acc) ->
+    S = byte_size(Rest),
     get_pixel(Rest, ChunkSize-1, {X+1,Y}, <<Acc/binary, RGB/binary, 16#FF>>).
 
 
@@ -126,16 +127,21 @@ gen_data(Img) ->
     gen_data(Data, Mask, <<>>).
 
 gen_data(<<>>, _Mask, Acc) ->
-    Size = byte_size(Acc) -4,
-    <<Return:Size/binary,_/binary>> = Acc,
-    Return;
+    Acc;
 gen_data(Data, Mask, Acc) ->
     {Rest, Count} = transparent_count(Data, Mask, 0),
     {Rest2, Pixels} = pixel_count(Rest, Mask, <<>>),
-    gen_data(Rest2, Mask, <<Acc/binary,
-			   Count:16/unsigned-integer-little,
-			   (byte_size(Pixels) div 3):16/unsigned-integer-little,
-			   Pixels/binary>>).
+    if byte_size(Pixels) == 0 ->
+	    P = <<>>;
+       true ->
+	    P = <<(byte_size(Pixels) div 3):16/unsigned-integer-little, Pixels/binary>>,
+	    P
+    end,
+    Acc2 = <<Acc/binary,
+	    Count:16/unsigned-integer-little,
+	    P/binary>>,
+
+    gen_data(Rest2, Mask, Acc2).
 
 
 
@@ -183,7 +189,7 @@ gen_index([], _, Acc) ->
 
 
 save_all() ->
-    ets:foldl(fun(S, _) ->
+    ets:foldl(fun(S, Dir) ->
 		      if S#sprite.id rem 1000 == 0 ->
 			      io:format("~pK\n", [S#sprite.id div 1000]);
 			 S#sprite.id rem 100 == 0 ->
@@ -191,12 +197,13 @@ save_all() ->
 			 true ->
 			      ignore
 		      end,
-		      save_png(S)
+		      save_png(integer_to_list(Dir),S),
+		      S#sprite.id div 100
 	      end,
 	      0, sprites).
 
-save_png(#sprite{id = Id, data = Data}) ->
-    save_file(integer_to_list(Id) ++ ".png", Data).
+save_png(Dir, #sprite{id = Id, data = Data}) ->
+    save_file(filename:join([Dir,integer_to_list(Id) ++ ".png"]), Data).
 
 save_file(File, D) ->
     RGBA = get_rgba(D),
@@ -204,7 +211,9 @@ save_file(File, D) ->
     Alpha = << <<A>> || <<_,_,_,A>> <= RGBA >>,
     I = wxImage:new(32,32,Data),
     wxImage:setAlpha(I, Alpha),
-    wxImage:saveFile(I, filename:join(["png/", File])),
+    Filename = filename:join(["png/", File]),
+    filelib:ensure_dir(Filename),
+    wxImage:saveFile(I, Filename),
     wxImage:destroy(I).
 
 test_save(D) ->

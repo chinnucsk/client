@@ -9,5 +9,10 @@
 
 -define(BOX_TITLE_HEIGHT, 15).
 
--record(form, {type,size,pos,text,flags}).
+-record(form, {type,size,pos,title,flags}).
 
+-record(texture, {id,
+		  tid,
+		  last_access,
+		  size,
+		  data}).
