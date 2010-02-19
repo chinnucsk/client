@@ -9,6 +9,7 @@ MODULES = \
 	font \
 	box \
 	graphics \
+	scene \
 	gr
 
 INCLUDES =

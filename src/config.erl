@@ -20,7 +20,8 @@
 	 terminate/2, code_change/3]).
 
 -record(config, {file = "config.hrl",
-		 ip = {127,0,0,1}}).
+		 ip = {127,0,0,1},
+		 sprite_size = 32}).
 
 
 
@@ -41,6 +42,8 @@ start_link(File) ->
 init(File) ->
     {ok, _Config} = load(File).
 
+handle_call(sprite_size, _From, State) ->
+    {reply, State#config.sprite_size, State};
 handle_call(ip, _From, State) ->
     {reply, State#config.ip, State};
 handle_call(reload, _From, State) ->

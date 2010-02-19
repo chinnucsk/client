@@ -68,9 +68,6 @@ draw_form(#form{type = box,
     
 
 
-    gl:color3ubv({255,250,220}),
-    gl:rasterPos2i(5, 25),
-    font:draw("brodTexT", '6x11'),
 
     gl:popMatrix();
 draw_form(#form{type = button,

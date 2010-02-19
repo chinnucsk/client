@@ -35,6 +35,7 @@ start_link() ->
 
 init([]) ->
     wx:new(),
+    config:start_link(),
 
     graphics:load_spr("test.spr"),
     Frame = wxFrame:new(wx:null(), ?wxID_ANY, "test", [{size, {800,600}}]),
@@ -46,16 +47,14 @@ init([]) ->
     wxGLCanvas:setCurrent(Canvas),
 
     init_gl(Canvas),
-
     ets:new(fonts, [named_table,ordered_set]),
     font:load_font("6x11.wingsfont"),
     font:load_font("7x14.wingsfont"),
     gl:pixelStorei (?GL_UNPACK_ALIGNMENT, 1),
     timer:send_interval(100, update),
-    %%wxGLCanvas:connect(Canvas, left_down),
+    wxGLCanvas:connect(Canvas, left_down),
     wxGLCanvas:connect(Canvas, size),
     wxGLCanvas:connect(Canvas, key_down),
-    wxGLCanvas:connect(Canvas, key_up),
     {Frame, #state{frame = Frame,
 		   canvas = Canvas,
 		   button = box:create_button("Button"),
@@ -80,7 +79,7 @@ handle_event(#wx{event = #wxMouse{type = left_up}}, State) ->
     wxGLCanvas:disconnect(State#state.canvas, left_up),
     {noreply, State};
 handle_event(#wx{event = #wxMouse{type = motion, x = X, y = Y}},
-	     State=#state{boxes = B}) ->
+	     State=#state{boxes = B=#form{}}) ->
     self() ! update,
     {noreply, State#state{boxes = B#form{pos = {X, Y}}}};
 handle_event(#wx{event = #wxKey{keyCode = Code, type = key_down}}, State) ->
@@ -106,9 +105,10 @@ handle_info(update, State=#state{dir = Dir}) ->
     gl:rasterPos2i(100, 100),
     font:draw("hello", lists:max(font:get_loaded_fonts())),
     gl:flush(),
+    scene:draw_scene(State#state.canvas),
     box:draw_form(State#state.boxes),
     box:draw_form(State#state.button),
-    
+
     graphics:blit_sprite({50,50}, hd(ets:lookup(sprites, 2))),
     draw_console(State),
     wxGLCanvas:swapBuffers(State#state.canvas),
