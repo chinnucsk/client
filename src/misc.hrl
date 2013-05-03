@@ -11,3 +11,7 @@
 
 -record(form, {type,size,pos,text,flags}).
 
+-record(gui, {frame,
+	      canvas,
+	      menu_bar}).
+

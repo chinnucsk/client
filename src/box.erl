@@ -66,8 +66,6 @@ draw_form(#form{type = box,
     draw_title(Title),
     border(W,H),
     
-
-
     gl:color3ubv({255,250,220}),
     gl:rasterPos2i(5, 25),
     font:draw("brodTexT", '6x11'),

@@ -19,6 +19,7 @@ load_spr(File) ->
     ets:new(sprites, [named_table, public, ordered_set, {keypos, #sprite.id}]),
 
     {ok, <<Ver:32/?UINT, TotalPics:16/?UINT>>} = file:pread(Device, bof, 6),
+    io:format("Ver: ~p\nTotalPics: ~p\n", [Ver, TotalPics]),
 
     Index = read_sprite_index(Device, TotalPics),
     read_sprites(Device, Index, 1).
@@ -35,7 +36,7 @@ read_sprite_index(Device, TotalPics, Acc) ->
 
 
 read_sprites(Device, [Index|Indexes], ID) when Index > 0 ->
-    {ok, <<Size:16/?UINT>>} = file:pread(Device, Index, 2),
+    {ok, <<Size:16/?UINT>>} = file:pread(Device, Index+3, 2),
      {ok, Data} = file:pread(Device, cur, Size),
     Spr = #sprite{size = Size,
 		  id = ID,
@@ -68,10 +69,12 @@ get_bytes(<<TSize:16/unsigned-integer-little,
 	   Data/binary>>, Size, Pos, Acc) when Size > 0 ->
     {T, Pos2} = get_transparent_pixel(TSize, Pos, <<>>),
     {Rest, P, Pos3} = get_pixel(Data, PSize, Pos2, <<>>),
+    %%io:format(" ~p\n", [{TSize,PSize, size(Data), Size, Pos3}]),
     get_bytes(Rest, Size-4-(PSize*3), Pos3, <<Acc/binary,T/binary,P/binary>>).
 
 
 get_transparent_pixel(0, Pos, Acc) ->
+    %%io:format("TransPos: ~p\n", [Pos]),
     {Acc, Pos};
 get_transparent_pixel(Size, {32,Y}, Acc) ->
     get_transparent_pixel(Size, {0,Y+1}, Acc);
@@ -82,6 +85,7 @@ get_transparent_pixel(Size, {X,Y}, Acc) ->
 get_pixel(Data, ChunkSize, {32,Y}, Acc) ->
     get_pixel(Data, ChunkSize, {0,Y+1}, Acc);
 get_pixel(Data, 0, Pos, Acc) ->
+    %%io:format("PixelPos: ~p\n", [Pos]),
     {Data, Acc, Pos};
 get_pixel(<<RGB:3/binary,Rest/binary>>, ChunkSize, {X, Y}, Acc) ->
     get_pixel(Rest, ChunkSize-1, {X+1,Y}, <<Acc/binary, RGB/binary, 16#FF>>).
@@ -181,7 +185,6 @@ gen_index([], _, Acc) ->
     Acc.
 
 
-
 save_all() ->
     ets:foldl(fun(S, _) ->
 		      if S#sprite.id rem 1000 == 0 ->
@@ -195,6 +198,9 @@ save_all() ->
 	      end,
 	      0, sprites).
 
+save_png(Id) when is_integer(Id) ->
+    Sprite = hd(ets:lookup(sprites, Id)),
+    save_png(Sprite);
 save_png(#sprite{id = Id, data = Data}) ->
     save_file(integer_to_list(Id) ++ ".png", Data).
 

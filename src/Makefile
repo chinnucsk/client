@@ -9,7 +9,8 @@ MODULES = \
 	font \
 	box \
 	graphics \
-	gr
+	gr \
+	window
 
 INCLUDES =
 

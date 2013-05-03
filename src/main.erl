@@ -9,7 +9,6 @@
 
 -behaviour(wx_object).
 
--include("engine.hrl").
 -include_lib("wx/include/wx.hrl").
 -include_lib("wx/include/gl.hrl").
 -include_lib("wx/include/glu.hrl").
@@ -26,7 +25,6 @@
 	 terminate/2, code_change/3]).
 
 -record(state, {gui, font, button, boxes,dir}).
-
 
 start() ->
     wx_object:start(?MODULE, [], []).
@@ -46,8 +44,8 @@ init([]) ->
     gl:pixelStorei (?GL_UNPACK_ALIGNMENT, 1),
     %graphics:create_gl_texture(hd(ets:lookup(sprites, 1))),
     timer:send_interval(100, update),
-    %% wxGLCanvas:connect(Gui#gui.canvas, left_down),
-    %% wxGLCanvas:connect(Gui#gui.canvas, left_up),
+    wxGLCanvas:connect(Gui#gui.canvas, left_down),
+    wxGLCanvas:connect(Gui#gui.canvas, left_up),
     wxGLCanvas:connect(Gui#gui.canvas, size),
     wxGLCanvas:connect(Gui#gui.canvas, key_down),
     wxGLCanvas:connect(Gui#gui.canvas, key_up),
@@ -101,8 +99,8 @@ handle_info(update, State=#state{gui = Gui, dir = Dir}) ->
     gl:rasterPos2i(100, 100),
     font:draw("hello", lists:max(font:get_loaded_fonts())),
     gl:flush(),
-    %% box:draw_form(State#state.boxes),
-    %% box:draw_form(State#state.button),
+    box:draw_form(State#state.boxes),
+    box:draw_form(State#state.button),
     
     graphics:blit_sprite({50,50}, hd(ets:lookup(sprites, Dir))),
     wxGLCanvas:swapBuffers(Gui#gui.canvas),
